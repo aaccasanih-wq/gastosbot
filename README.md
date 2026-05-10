@@ -7,7 +7,7 @@ Bot personal para el registro y consulta automática de gastos familiares. Funci
 - **Registra gastos automáticamente** desde correos bancarios (BCP, Yape, Interbank)
 - **Acepta comandos en lenguaje natural** por Telegram (texto o voz)
 - **Multi-usuario** — cada familiar tiene su propia hoja de registros
-- **Dashboard visual** con gráficos interactivos *(próximamente — app Streamlit)*
+- **Dashboard visual** con gráficos interactivos — [gastosbot.streamlit.app](https://gastosbot.streamlit.app)
 
 ## Stack
 
@@ -31,12 +31,28 @@ Todos los comandos se envían en lenguaje natural, por ejemplo:
 - *"Elimina el gasto de ayer en Rappi"* → elimina por criterio
 - *"Corrige el monto del gasto #42 a 80 soles"* → edita un campo
 
+## Dashboard
+
+App Streamlit con visualizaciones interactivas conectada al Spreadsheet en tiempo real:
+
+- Gasto total por mes
+- Distribución por concepto
+- Gasto por medio de pago
+- Evolución diaria
+- Comparación entre familiares
+- Top beneficiarios
+
+Disponible en: [gastosbot.streamlit.app](https://gastosbot.streamlit.app)
+
 ## Estructura del proyecto
 
 ```
 gastosbot/
-├── Código.js          # Lógica principal (Google Apps Script)
-├── appsscript.json    # Configuración del proyecto GAS
+├── Código.js             # Lógica principal (Google Apps Script)
+├── appsscript.json       # Configuración del proyecto GAS
+├── dashboard/
+│   ├── app.py            # App Streamlit
+│   └── requirements.txt  # Dependencias Python
 └── .gitignore
 ```
 
