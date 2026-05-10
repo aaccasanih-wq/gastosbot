@@ -134,8 +134,8 @@ function rowToRecord(row, rowIndex) {
     rowIndex:        rowIndex,
     id:              row[0],
     fecha_operacion: formatFecha(row[1]),
-    emisor:          row[2],
-    beneficiario:    row[3],
+    pagador:         row[2],
+    destinatario:    row[3],
     medio:           row[4],
     monto:           row[5],
     descripcion:     row[6],
@@ -205,7 +205,7 @@ function searchRecordsByCriteria(sheet, params) {
       if (params.start_date && d < new Date(params.start_date)) continue;
       if (params.end_date   && d > new Date(params.end_date))   continue;
     }
-    if (params.beneficiario && String(r.beneficiario).toLowerCase().indexOf(String(params.beneficiario).toLowerCase()) === -1) continue;
+    if (params.destinatario && String(r.destinatario).toLowerCase().indexOf(String(params.destinatario).toLowerCase()) === -1) continue;
     if (params.concepto && r.concepto !== params.concepto) continue;
     if (params.medio    && r.medio    !== params.medio)    continue;
     if (params.monto    && parseFloat(r.monto) !== parseFloat(params.monto)) continue;
@@ -218,8 +218,8 @@ function appendRecord(sheet, record) {
   sheet.appendRow([
     record.id,
     record.fecha_operacion,
-    record.emisor,
-    record.beneficiario,
+    record.pagador,
+    record.destinatario,
     record.medio,
     record.monto,
     record.descripcion,
@@ -345,8 +345,8 @@ function processEmailMessage(message, ss, label) {
     var record = {
       id:              generateId(sheet),
       fecha_operacion: emailData.fecha_operacion,
-      emisor:          emailData.emisor,
-      beneficiario:    emailData.beneficiario,
+      pagador:          emailData.pagador,
+      destinatario:    emailData.destinatario,
       medio:           emailData.medio,
       monto:           emailData.monto,
       descripcion:     emailData.descripcion,
@@ -394,11 +394,11 @@ function extractEmailData(message) {
   var systemPrompt = 'Eres un extractor de datos de correos bancarios peruanos.\n' +
     'Extrae los datos y devuelve JSON con exactamente estos campos:\n' +
     '- fecha_operacion: string ISO "YYYY-MM-DDTHH:MM:SS"\n' +
-    '- emisor: nombre del dueno de la cuenta\n' +
-    '- beneficiario: a quien fue el dinero\n' +
+    '- pagador: nombre del dueno de la cuenta\n' +
+    '- destinatario: a quien fue el dinero\n' +
     '- medio: exactamente uno de: "Yape", "Tarjeta Debito BCP", "Tarjeta Credito BCP", "Interbank", "Efectivo"\n' +
     '- monto: numero decimal (ej: 15.00)\n' +
-    '- descripcion: nota del emisor o "" si no hay\n' +
+    '- descripcion: nota del pagador o "" si no hay\n' +
     '- concepto: exactamente uno de: "comida", "transporte", "servicios", "entretenimiento", "salud", "educacion", "ropa", "prestamos", "pago de prestamos", "tecnologia", "hogar", "otro"\n\n' +
     'Regla BCP: asunto con "debito" o "cargo" => "Tarjeta Debito BCP"; "credito" => "Tarjeta Credito BCP".\n' +
     'Regla Yape: remitente notificaciones@yape.pe => "Yape".\n' +
@@ -420,8 +420,8 @@ function formatNewRecordMsg(record) {
   return 'Nuevo gasto registrado\n' +
     'ID: ' + record.id + '\n' +
     'Fecha: ' + record.fecha_operacion + '\n' +
-    'Emisor: ' + record.emisor + '\n' +
-    'Beneficiario: ' + record.beneficiario + '\n' +
+    'Emisor: ' + record.pagador + '\n' +
+    'Beneficiario: ' + record.destinatario + '\n' +
     'Medio: ' + record.medio + '\n' +
     'Monto: S/ ' + record.monto + '\n' +
     'Descripcion: ' + (record.descripcion || '-') + '\n' +
@@ -581,14 +581,14 @@ function detectIntent(userMessage, recentRecordsJson, usuario) {
     '- params: objeto con los parametros requeridos segun la accion\n' +
     '- reply: texto de respuesta en espanol, sin markdown ni HTML\n\n' +
     'Parametros por accion:\n' +
-    '  add_cash:       {beneficiario, monto, descripcion, concepto}\n' +
-    '  edit_record:    {record_id?, start_date?, end_date?, beneficiario?, concepto?, medio?, monto?, field, new_value}\n' +
+    '  add_cash:       {destinatario, monto, descripcion, concepto}\n' +
+    '  edit_record:    {record_id?, start_date?, end_date?, destinatario?, concepto?, medio?, monto?, field, new_value}\n' +
     '    Usa record_id si lo conoces del contexto; si no, describe el registro con criterios de busqueda.\n' +
     '  confirm:        {}\n' +
     '  get_last:       {n}\n' +
     '  get_by_range:   {start_date: "YYYY-MM-DD", end_date: "YYYY-MM-DD"}\n' +
     '  get_total:      {start_date?: "YYYY-MM-DD", end_date?: "YYYY-MM-DD"}\n' +
-    '  delete_record:  {record_id?, start_date?, end_date?, beneficiario?, concepto?, medio?, monto?}\n' +
+    '  delete_record:  {record_id?, start_date?, end_date?, destinatario?, concepto?, medio?, monto?}\n' +
     '    Usa record_id si lo conoces del contexto; si no, describe el registro con criterios de busqueda.\n' +
     '  get_total_by:   {category?, medio?, start_date?: "YYYY-MM-DD", end_date?: "YYYY-MM-DD"}\n' +
     '    Usa category para filtrar por categoria, medio para filtrar por medio de pago, o ambos.\n\n' +
@@ -633,8 +633,8 @@ function handleAddCash(params, familiar, sheet, chatId, aiReply) {
   var record = {
     id:              generateId(sheet),
     fecha_operacion: fecha,
-    emisor:          familiar.usuario,
-    beneficiario:    params.beneficiario || '',
+    pagador:          familiar.usuario,
+    destinatario:    params.destinatario || '',
     medio:           'Efectivo',
     monto:           parseFloat(params.monto) || 0,
     descripcion:     params.descripcion || '',
@@ -666,7 +666,7 @@ function handleEditRecord(params, sheet, chatId, aiReply) {
       var lines = ['Encontre varios registros que coinciden. Indica el ID del que deseas editar:\n'];
       for (var i = 0; i < found.length; i++) {
         var r = found[i];
-        lines.push(r.id + ' | ' + String(r.fecha_operacion).substring(0, 16) + ' | ' + r.beneficiario + ' | S/ ' + r.monto + ' | ' + r.concepto);
+        lines.push(r.id + ' | ' + String(r.fecha_operacion).substring(0, 16) + ' | ' + r.destinatario + ' | S/ ' + r.monto + ' | ' + r.concepto);
       }
       sendTelegram(chatId, lines.join('\n'));
       return;
@@ -676,8 +676,8 @@ function handleEditRecord(params, sheet, chatId, aiReply) {
 
   var colMap = {
     fecha_operacion: 2,
-    emisor:          3,
-    beneficiario:    4,
+    pagador:          3,
+    destinatario:    4,
     medio:           5,
     monto:           6,
     descripcion:     7,
@@ -708,7 +708,7 @@ function handleGetLast(params, sheet, chatId) {
   var lines = [];
   for (var i = 0; i < records.length; i++) {
     var r = records[i];
-    lines.push(r.id + ' | ' + String(r.fecha_operacion).substring(0, 10) + ' | ' + r.beneficiario + ' | S/ ' + r.monto + ' | ' + r.concepto);
+    lines.push(r.id + ' | ' + String(r.fecha_operacion).substring(0, 10) + ' | ' + r.destinatario + ' | S/ ' + r.monto + ' | ' + r.concepto);
   }
   sendTelegram(chatId, 'Ultimos ' + records.length + ' registros:\n\n' + lines.join('\n'));
 }
@@ -723,7 +723,7 @@ function handleGetByRange(params, sheet, chatId) {
   var lines = [];
   for (var i = 0; i < records.length; i++) {
     var r = records[i];
-    lines.push(r.id + ' | ' + String(r.fecha_operacion).substring(0, 10) + ' | ' + r.beneficiario + ' | S/ ' + r.monto + ' | ' + r.concepto);
+    lines.push(r.id + ' | ' + String(r.fecha_operacion).substring(0, 10) + ' | ' + r.destinatario + ' | S/ ' + r.monto + ' | ' + r.concepto);
   }
   var label = params.start_date === params.end_date
     ? params.start_date
@@ -766,13 +766,13 @@ function handleDeleteRecord(params, sheet, chatId, aiReply) {
   if (found.length === 1) {
     var r = found[0];
     sheet.deleteRow(r.rowIndex);
-    sendTelegram(chatId, aiReply || ('Registro ' + r.id + ' eliminado.\n' + r.beneficiario + ' | S/ ' + r.monto + ' | ' + r.concepto));
+    sendTelegram(chatId, aiReply || ('Registro ' + r.id + ' eliminado.\n' + r.destinatario + ' | S/ ' + r.monto + ' | ' + r.concepto));
     return;
   }
   var lines = ['Encontre varios registros que coinciden. Indica el ID del que deseas eliminar:\n'];
   for (var i = 0; i < found.length; i++) {
     var rf = found[i];
-    lines.push(rf.id + ' | ' + String(rf.fecha_operacion).substring(0, 16) + ' | ' + rf.beneficiario + ' | S/ ' + rf.monto + ' | ' + rf.concepto);
+    lines.push(rf.id + ' | ' + String(rf.fecha_operacion).substring(0, 16) + ' | ' + rf.destinatario + ' | S/ ' + rf.monto + ' | ' + rf.concepto);
   }
   sendTelegram(chatId, lines.join('\n'));
 }
