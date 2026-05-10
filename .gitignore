@@ -1,0 +1,16 @@
+# clasp local config — contains scriptId
+.clasp.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Google credentials
+credentials.json
+token.json
+service_account.json
