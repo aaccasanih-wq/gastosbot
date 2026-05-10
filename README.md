@@ -7,7 +7,7 @@ Bot personal para el registro y consulta automática de gastos familiares. Funci
 - **Registra gastos automáticamente** desde correos bancarios (BCP, Yape, Interbank)
 - **Acepta comandos en lenguaje natural** por Telegram (texto o voz)
 - **Multi-usuario** — cada familiar tiene su propia hoja de registros
-- **Dashboard visual** con gráficos interactivos — [gastosbot.streamlit.app](https://gastosbot.streamlit.app)
+- **Dashboard visual** con gráficos interactivos (app Streamlit)
 
 ## Stack
 
@@ -42,7 +42,6 @@ App Streamlit con visualizaciones interactivas conectada al Spreadsheet en tiemp
 - Comparación entre familiares
 - Top beneficiarios
 
-Disponible en: [gastosbot.streamlit.app](https://gastosbot.streamlit.app)
 
 ## Estructura del proyecto
 
