@@ -12,6 +12,14 @@ var DEEPSEEK_URL = 'https://api.deepseek.com/v1/chat/completions';
 var DEEPSEEK_MODEL = 'deepseek-chat';
 
 // =====================================================
+// CONFIGURACIÓN — Cambia este valor antes de usar el script
+// =====================================================
+
+// Correo de Gmail donde recibes los reenvíos de notificaciones bancarias.
+// Ejemplo: si tu correo es "mis.gastos@gmail.com", escribe exactamente eso.
+var FORWARDING_EMAIL = 'gastos.familia.hub@gmail.com';
+
+// =====================================================
 // HELPERS — CONFIGURACIÓN
 // =====================================================
 
@@ -368,9 +376,10 @@ function processEmailMessage(message, ss, label) {
 
 function identifyFamiliarFromRaw(rawContent) {
   var configs = getConfigData();
+  var emailBase = FORWARDING_EMAIL.replace('@gmail.com', '').replace(/\./g, '\\.');
 
-  // Emails reenviados con sufijo: gastos.familia.hub+axel@gmail.com
-  var regexSufijo = /Delivered-To:\s*gastos\.familia\.hub(\+[a-z]+)@gmail\.com/gi;
+  // Emails reenviados con sufijo: FORWARDING_EMAIL+axel@gmail.com
+  var regexSufijo = new RegExp('Delivered-To:\\s*' + emailBase + '(\\+[a-z]+)@gmail\\.com', 'gi');
   var match;
   while ((match = regexSufijo.exec(rawContent)) !== null) {
     for (var i = 0; i < configs.length; i++) {
@@ -380,8 +389,8 @@ function identifyFamiliarFromRaw(rawContent) {
     }
   }
 
-  // Emails directos sin sufijo: gastos.familia.hub@gmail.com → familiar con email_sufijo vacío
-  if (/Delivered-To:\s*gastos\.familia\.hub@gmail\.com/i.test(rawContent)) {
+  // Emails directos sin sufijo: FORWARDING_EMAIL@gmail.com → familiar con email_sufijo vacío
+  if (new RegExp('Delivered-To:\\s*' + emailBase + '@gmail\\.com', 'i').test(rawContent)) {
     for (var j = 0; j < configs.length; j++) {
       if (configs[j].email_sufijo === '') return configs[j];
     }
